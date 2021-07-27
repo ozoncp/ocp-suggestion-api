@@ -12,17 +12,17 @@ var ErrDuplicateKey = errors.New("duplicate key found")
 //ConvertSliceToMap конвертирует слайс от структуры Suggestion в отображение,
 //где ключ - идентификатор структуры, а значение - сама структура
 func ConvertSliceToMap(suggestions []models.Suggestion) (map[uint64]models.Suggestion, error) {
-	if suggestions == nil || len(suggestions) == 0 {
+	if len(suggestions) == 0 {
 		return nil, ErrSliceIsNil
 	}
 
 	outMap := make(map[uint64]models.Suggestion, len(suggestions))
 	for _, elem := range suggestions {
-		if _, found := outMap[elem.Id]; found {
-			return nil, fmt.Errorf("%w: elem1: %v, elem2: %v",
-				ErrDuplicateKey, outMap[elem.Id], elem)
+		if _, found := outMap[elem.ID]; found {
+			return nil, fmt.Errorf("elem1: %v, elem2: %v : %w",
+				outMap[elem.ID], elem, ErrDuplicateKey)
 		}
-		outMap[elem.Id] = elem
+		outMap[elem.ID] = elem
 	}
 
 	return outMap, nil

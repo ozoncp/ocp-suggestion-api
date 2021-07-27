@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -11,25 +12,26 @@ const ConfigFileName = "config.json"
 func main() {
 	fmt.Println("This is ocp-suggestion-api")
 
-	//ReadConfigFile - функтор, реализует открытие и закрытие файла, используя defer
-	ReadConfigFile := func(filename string) (err error) {
-		var file *os.File
-		file, err = os.Open(filename)
+	//readConfigFile - функтор, реализует открытие и закрытие файла, используя defer
+	readConfigFile := func(filename string) error {
+		file, err := os.Open(filename)
 		if err != nil {
-			return
+			return err
+		}
+		if file == nil {
+			return errors.New("file is nil")
 		}
 		defer func() {
-			closeErr := file.Close()
-			if err == nil { //Если не было ошибки открытия файла,
-				err = closeErr //возвращаем в err ошибку закрытия
+			if err := file.Close(); err != nil {
+				fmt.Println("error when closing config file: ", err)
 			}
 		}()
-		return
+		return nil
 	}
 
 	//бесконечный цикл, пока не будет прочитана информация из конфиг-файла
 	for {
-		if errConfig := ReadConfigFile(ConfigFileName); errConfig != nil {
+		if errConfig := readConfigFile(ConfigFileName); errConfig != nil {
 			fmt.Printf("Error read config file '%s', error: %v\n", ConfigFileName, errConfig)
 			fmt.Println("Wait 5 seconds and repeat...")
 			time.Sleep(5 * time.Second)

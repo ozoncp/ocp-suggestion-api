@@ -10,18 +10,18 @@ import (
 //TestSplitToBulksSuccess - тесты ConvertSliceToMap без ожидаемых ошибок
 func TestConvertSliceToMapSuccess(t *testing.T) {
 	data := []models.Suggestion{
-		{1, 1, 1},
-		{2, 2, 2},
-		{3, 3, 3},
-		{4, 4, 4},
-		{5, 5, 5},
+		{ID: 1, UserID: 1, CourseID: 1},
+		{ID: 2, UserID: 2, CourseID: 2},
+		{ID: 3, UserID: 3, CourseID: 3},
+		{ID: 4, UserID: 4, CourseID: 4},
+		{ID: 5, UserID: 5, CourseID: 5},
 	}
 	want := map[uint64]models.Suggestion{
-		1: {1, 1, 1},
-		2: {2, 2, 2},
-		3: {3, 3, 3},
-		4: {4, 4, 4},
-		5: {5, 5, 5},
+		1: {ID: 1, UserID: 1, CourseID: 1},
+		2: {ID: 2, UserID: 2, CourseID: 2},
+		3: {ID: 3, UserID: 3, CourseID: 3},
+		4: {ID: 4, UserID: 4, CourseID: 4},
+		5: {ID: 5, UserID: 5, CourseID: 5},
 	}
 
 	{
@@ -35,11 +35,11 @@ func TestConvertSliceToMapSuccess(t *testing.T) {
 //TestSplitToBulksFail - тесты ConvertSliceToMap с ожидаемыми ошибками
 func TestConvertSliceToMapFail(t *testing.T) {
 	data := []models.Suggestion{
-		{1, 1, 1},
-		{2, 2, 2},
-		{5, 53, 53},
-		{4, 4, 4},
-		{5, 5, 5},
+		{ID: 1, UserID: 1, CourseID: 1},
+		{ID: 2, UserID: 2, CourseID: 2},
+		{ID: 5, UserID: 53, CourseID: 53},
+		{ID: 4, UserID: 4, CourseID: 4},
+		{ID: 5, UserID: 5, CourseID: 5},
 	}
 	var dataNil []models.Suggestion
 

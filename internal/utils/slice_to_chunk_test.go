@@ -2,36 +2,35 @@ package utils
 
 import "testing"
 
+var s1 = make([]int, 4500)
+var s2 = make([]int, 50000)
+var s3 = make([]int, 150000)
+
+//DoBenchmarksSlice вспомогательная функция для бенчмарков BenchmarkSliceToChunk/BenchmarkSliceToChunkMake
+func DoBenchmarksSlice(f func(in_slice []int, chunk_size int) ([][]int, error)) {
+	_, _ = f(s1, 20)
+	_, _ = f(s2, 20)
+	_, _ = f(s3, 20)
+	_, _ = f(s1, 200)
+	_, _ = f(s2, 200)
+	_, _ = f(s3, 200)
+	_, _ = f(s1, 1000)
+	_, _ = f(s2, 1000)
+	_, _ = f(s3, 1000)
+}
+
 //BenchmarkSliceToChunk бенчмарк для SliceToChunk
 func BenchmarkSliceToChunk(b *testing.B) {
-	const size_data = 10000000
-	const chunk_size = 10
-	data := make([]int, 0, size_data)
-	b.ResetTimer() // remove time of allocation
 	for i := 0; i < b.N; i++ {
-		for j := range data { // prepare data
-			data[j] = i ^ j ^ 0x2cc
-		}
-		b.StartTimer()
-		SliceToChunk(data, chunk_size)
-		b.StopTimer()
+		DoBenchmarksSlice(SliceToChunk)
 	}
 	b.ReportAllocs()
 }
 
 //BenchmarkSliceToChunkMake бенчмарк для SliceToChunkMake
 func BenchmarkSliceToChunkMake(b *testing.B) {
-	const size_data = 10000000
-	const chunk_size = 10
-	data := make([]int, 0, size_data)
-	b.ResetTimer() // remove time of allocation
 	for i := 0; i < b.N; i++ {
-		for j := range data { // prepare data
-			data[j] = i ^ j ^ 0x2cc
-		}
-		b.StartTimer()
-		SliceToChunkMake(data, chunk_size)
-		b.StopTimer()
+		DoBenchmarksSlice(SliceToChunkMake)
 	}
 	b.ReportAllocs()
 }

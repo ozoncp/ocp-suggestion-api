@@ -7,8 +7,8 @@ build:
 	go build -o bin/${PROJECT_NAME} ./cmd/${PROJECT_NAME}
 
 .PHONY: run
-run:	build
-	@./bin/${PROJECT_NAME}
+run:
+	go run ./cmd/${PROJECT_NAME}
 
 .PHONY: test
 test:

@@ -10,52 +10,52 @@ import (
 //TestSplitToBulksSuccess - тесты SplitToBulks без ожидаемых ошибок
 func TestSplitToBulksSuccess(t *testing.T) {
 	data := []models.Suggestion{
-		{1, 1, 1},
-		{2, 2, 2},
-		{3, 3, 3},
-		{4, 4, 4},
-		{5, 5, 5},
+		{ID: 1, UserID: 1, CourseID: 1},
+		{ID: 2, UserID: 2, CourseID: 2},
+		{ID: 3, UserID: 3, CourseID: 3},
+		{ID: 4, UserID: 4, CourseID: 4},
+		{ID: 5, UserID: 5, CourseID: 5},
 	}
 	batchSize1 := uint(2)
 	want1 := [][]models.Suggestion{
 		{
-			{1, 1, 1},
-			{2, 2, 2},
+			{ID: 1, UserID: 1, CourseID: 1},
+			{ID: 2, UserID: 2, CourseID: 2},
 		},
 		{
-			{3, 3, 3},
-			{4, 4, 4},
+			{ID: 3, UserID: 3, CourseID: 3},
+			{ID: 4, UserID: 4, CourseID: 4},
 		},
 		{
-			{5, 5, 5},
+			{ID: 5, UserID: 5, CourseID: 5},
 		},
 	}
 	batchSize2 := uint(1)
 	want2 := [][]models.Suggestion{
 		{
-			{1, 1, 1},
+			{ID: 1, UserID: 1, CourseID: 1},
 		},
 		{
-			{2, 2, 2},
+			{ID: 2, UserID: 2, CourseID: 2},
 		},
 		{
-			{3, 3, 3},
+			{ID: 3, UserID: 3, CourseID: 3},
 		},
 		{
-			{4, 4, 4},
+			{ID: 4, UserID: 4, CourseID: 4},
 		},
 		{
-			{5, 5, 5},
+			{ID: 5, UserID: 5, CourseID: 5},
 		},
 	}
 	batchSize3 := uint(5)
 	want3 := [][]models.Suggestion{
 		{
-			{1, 1, 1},
-			{2, 2, 2},
-			{3, 3, 3},
-			{4, 4, 4},
-			{5, 5, 5},
+			{ID: 1, UserID: 1, CourseID: 1},
+			{ID: 2, UserID: 2, CourseID: 2},
+			{ID: 3, UserID: 3, CourseID: 3},
+			{ID: 4, UserID: 4, CourseID: 4},
+			{ID: 5, UserID: 5, CourseID: 5},
 		},
 	}
 
@@ -79,11 +79,11 @@ func TestSplitToBulksSuccess(t *testing.T) {
 //TestSplitToBulksFail - тесты SplitToBulks с ожидаемыми ошибками
 func TestSplitToBulksFail(t *testing.T) {
 	data := []models.Suggestion{
-		{1, 1, 1},
-		{2, 2, 2},
-		{3, 3, 3},
-		{4, 4, 4},
-		{5, 5, 5},
+		{ID: 1, UserID: 1, CourseID: 1},
+		{ID: 2, UserID: 2, CourseID: 2},
+		{ID: 3, UserID: 3, CourseID: 3},
+		{ID: 4, UserID: 4, CourseID: 4},
+		{ID: 5, UserID: 5, CourseID: 5},
 	}
 	var dataNil []models.Suggestion
 

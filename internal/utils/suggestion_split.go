@@ -13,15 +13,17 @@ var ErrSliceIsNil = errors.New("slice cannot be nil or zero length")
 
 //SplitToBulks разделяет слайс Suggestion на слайс слайсов с заданным размером батча
 func SplitToBulks(suggestions []models.Suggestion, batchSize uint) ([][]models.Suggestion, error) {
-	if suggestions == nil || len(suggestions) == 0 {
+	if len(suggestions) == 0 {
 		return nil, ErrSliceIsNil
 	}
 	if batchSize == 0 {
 		return nil, ErrBatchSizeIsZero
 	}
-	length := uint(len(suggestions))
 
-	var outSlice [][]models.Suggestion
+	length := uint(len(suggestions))
+	numChunks := (length-1)/batchSize + 1
+	outSlice := make([][]models.Suggestion, 0, numChunks)
+
 	for beg := uint(0); beg < length; beg += batchSize {
 		end := beg + batchSize
 		if end > length {
