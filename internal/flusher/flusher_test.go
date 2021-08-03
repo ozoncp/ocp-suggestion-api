@@ -1,6 +1,7 @@
 package flusher_test
 
 import (
+	"context"
 	"errors"
 
 	"github.com/golang/mock/gomock"
@@ -15,14 +16,17 @@ import (
 var _ = Describe("Flusher", func() {
 	var (
 		ctrl        *gomock.Controller
+		ctx         context.Context
 		mockRepo    *mocks.MockRepo
 		f           flusher.Flusher
 		suggestions []models.Suggestion
 		result      []models.Suggestion
+		err         error
 	)
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
+		ctx = context.Background()
 		mockRepo = mocks.NewMockRepo(ctrl)
 
 		suggestions = []models.Suggestion{
@@ -41,21 +45,23 @@ var _ = Describe("Flusher", func() {
 		It("should upload to repo in 1 successful call, no remains left", func() {
 			f = flusher.NewFlusher(4, mockRepo)
 			mockRepo.EXPECT().
-				AddSuggestions(gomock.Any()).
+				AddSuggestions(ctx, gomock.Any()).
 				Return(nil).
 				Times(1)
-			result = f.Flush(suggestions)
+			result, err = f.Flush(ctx, suggestions)
 			Expect(result).Should(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("should upload to repo in 2 successful calls, no remains left", func() {
 			f = flusher.NewFlusher(2, mockRepo)
 			mockRepo.EXPECT().
-				AddSuggestions(gomock.Any()).
+				AddSuggestions(ctx, gomock.Any()).
 				Return(nil).
 				Times(2)
-			result = f.Flush(suggestions)
+			result, err = f.Flush(ctx, suggestions)
 			Expect(result).Should(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 	})
 
@@ -66,29 +72,28 @@ var _ = Describe("Flusher", func() {
 
 		It("should failed to upload to repo, all items remain", func() {
 			mockRepo.EXPECT().
-				AddSuggestions(gomock.Any()).
+				AddSuggestions(ctx, gomock.Any()).
 				Return(errors.New("error")).
 				Times(1)
 
-			result = f.Flush(suggestions)
+			result, err = f.Flush(ctx, suggestions)
 			Expect(result).To(Equal(suggestions))
+			Expect(err).To(HaveOccurred())
 		})
 
 		It("should upload to repo 1st chunk (1 successful call), then 1 failure call and 1 item remains", func() {
-			f = flusher.NewFlusher(3, mockRepo)
-
 			successCall := mockRepo.EXPECT().
-				AddSuggestions(gomock.Any()).
+				AddSuggestions(ctx, gomock.Any()).
 				Return(nil)
 			failCall := mockRepo.EXPECT().
-				AddSuggestions(gomock.Any()).
+				AddSuggestions(ctx, gomock.Any()).
 				Return(errors.New("error"))
 			gomock.InOrder(successCall, failCall)
 
-			result = f.Flush(suggestions)
-			Expect(result).To(Equal([]models.Suggestion{
-				suggestions[3],
-			}), "rest that failed to upload to repo")
+			result, err = f.Flush(ctx, suggestions)
+			Expect(result).To(Equal(suggestions[3:]),
+				"rest that failed to upload to repo")
+			Expect(err).To(HaveOccurred())
 		})
 	})
 })

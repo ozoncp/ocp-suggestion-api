@@ -1,10 +1,14 @@
 package repo
 
-import "github.com/ozoncp/ocp-suggestion-api/internal/models"
+import (
+	"context"
+	
+	"github.com/ozoncp/ocp-suggestion-api/internal/models"
+)
 
 //Repo - интерфейс хранилища для сущности Suggestion
 type Repo interface {
-	AddSuggestions(suggestion []models.Suggestion) error
-	ListSuggestions(limit, offset uint64) ([]models.Suggestion, error)
-	DescribeSuggestion(suggestionId uint64) (*models.Suggestion, error)
+	AddSuggestions(ctx context.Context, suggestion []models.Suggestion) error
+	ListSuggestions(ctx context.Context, limit, offset uint64) ([]models.Suggestion, error)
+	DescribeSuggestion(ctx context.Context, suggestionId uint64) (*models.Suggestion, error)
 }

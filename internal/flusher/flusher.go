@@ -1,6 +1,10 @@
 package flusher
 
 import (
+	"context"
+	"errors"
+	"fmt"
+
 	"github.com/ozoncp/ocp-suggestion-api/internal/models"
 	"github.com/ozoncp/ocp-suggestion-api/internal/repo"
 	"github.com/ozoncp/ocp-suggestion-api/internal/utils"
@@ -8,7 +12,7 @@ import (
 
 // Flusher - интерфейс для сброса задач в хранилище
 type Flusher interface {
-	Flush(suggestion []models.Suggestion) []models.Suggestion
+	Flush(ctx context.Context, suggestion []models.Suggestion) ([]models.Suggestion, error)
 }
 
 // NewFlusher возвращает Flusher с поддержкой батчевого сохранения
@@ -26,18 +30,18 @@ type flusher struct {
 
 //Flush сбрасывает слайс Suggestion в хранилище частями заданного размера (чанками).
 //Если при сбросе возникает ошибка, то несохранённый остаток возвращается функцией
-func (f *flusher) Flush(suggestions []models.Suggestion) []models.Suggestion {
+func (f *flusher) Flush(ctx context.Context, suggestions []models.Suggestion) ([]models.Suggestion, error) {
 	if f == nil {
-		return nil
+		return nil, errors.New("interface is nil")
 	}
 	splitSuggestions, err := utils.SplitToBulks(suggestions, f.chunkSize)
 	if err != nil {
-		return suggestions
+		return suggestions, fmt.Errorf("SplitToBulks : %w", err)
 	}
 	for i, chunk := range splitSuggestions {
-		if err := f.suggestionRepo.AddSuggestions(chunk); err != nil {
-			return suggestions[uint(i)*f.chunkSize:]
+		if err := f.suggestionRepo.AddSuggestions(ctx, chunk); err != nil {
+			return suggestions[uint(i)*f.chunkSize:], fmt.Errorf("AddSuggestions : %w", err)
 		}
 	}
-	return nil
+	return nil, nil
 }

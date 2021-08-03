@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -35,45 +36,45 @@ func (m *MockRepo) EXPECT() *MockRepoMockRecorder {
 }
 
 // AddSuggestions mocks base method.
-func (m *MockRepo) AddSuggestions(arg0 []models.Suggestion) error {
+func (m *MockRepo) AddSuggestions(arg0 context.Context, arg1 []models.Suggestion) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddSuggestions", arg0)
+	ret := m.ctrl.Call(m, "AddSuggestions", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddSuggestions indicates an expected call of AddSuggestions.
-func (mr *MockRepoMockRecorder) AddSuggestions(arg0 interface{}) *gomock.Call {
+func (mr *MockRepoMockRecorder) AddSuggestions(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSuggestions", reflect.TypeOf((*MockRepo)(nil).AddSuggestions), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSuggestions", reflect.TypeOf((*MockRepo)(nil).AddSuggestions), arg0, arg1)
 }
 
 // DescribeSuggestion mocks base method.
-func (m *MockRepo) DescribeSuggestion(arg0 uint64) (*models.Suggestion, error) {
+func (m *MockRepo) DescribeSuggestion(arg0 context.Context, arg1 uint64) (*models.Suggestion, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DescribeSuggestion", arg0)
+	ret := m.ctrl.Call(m, "DescribeSuggestion", arg0, arg1)
 	ret0, _ := ret[0].(*models.Suggestion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // DescribeSuggestion indicates an expected call of DescribeSuggestion.
-func (mr *MockRepoMockRecorder) DescribeSuggestion(arg0 interface{}) *gomock.Call {
+func (mr *MockRepoMockRecorder) DescribeSuggestion(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeSuggestion", reflect.TypeOf((*MockRepo)(nil).DescribeSuggestion), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeSuggestion", reflect.TypeOf((*MockRepo)(nil).DescribeSuggestion), arg0, arg1)
 }
 
 // ListSuggestions mocks base method.
-func (m *MockRepo) ListSuggestions(arg0, arg1 uint64) ([]models.Suggestion, error) {
+func (m *MockRepo) ListSuggestions(arg0 context.Context, arg1, arg2 uint64) ([]models.Suggestion, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListSuggestions", arg0, arg1)
+	ret := m.ctrl.Call(m, "ListSuggestions", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]models.Suggestion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListSuggestions indicates an expected call of ListSuggestions.
-func (mr *MockRepoMockRecorder) ListSuggestions(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRepoMockRecorder) ListSuggestions(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSuggestions", reflect.TypeOf((*MockRepo)(nil).ListSuggestions), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSuggestions", reflect.TypeOf((*MockRepo)(nil).ListSuggestions), arg0, arg1, arg2)
 }
