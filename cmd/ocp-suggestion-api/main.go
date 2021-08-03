@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -17,9 +16,6 @@ func main() {
 		file, err := os.Open(filename)
 		if err != nil {
 			return err
-		}
-		if file == nil {
-			return errors.New("file is nil")
 		}
 		defer func() {
 			if err := file.Close(); err != nil {
