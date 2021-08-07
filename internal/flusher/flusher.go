@@ -10,6 +10,9 @@ import (
 	"github.com/ozoncp/ocp-suggestion-api/internal/utils"
 )
 
+//ErrNilPointer означает, что передан нулевой указатель
+var ErrNilPointer = errors.New("pointer is nil")
+
 // Flusher - интерфейс для сброса задач в хранилище
 type Flusher interface {
 	Flush(ctx context.Context, suggestion []models.Suggestion) ([]models.Suggestion, error)
@@ -32,7 +35,7 @@ type flusher struct {
 //Если при сбросе возникает ошибка, то несохранённый остаток возвращается функцией
 func (f *flusher) Flush(ctx context.Context, suggestions []models.Suggestion) ([]models.Suggestion, error) {
 	if f == nil {
-		return nil, errors.New("interface is nil")
+		return nil, ErrNilPointer
 	}
 	splitSuggestions, err := utils.SplitToBulks(suggestions, f.chunkSize)
 	if err != nil {
