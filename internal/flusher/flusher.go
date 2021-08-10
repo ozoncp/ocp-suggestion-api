@@ -2,16 +2,12 @@ package flusher
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/ozoncp/ocp-suggestion-api/internal/models"
 	"github.com/ozoncp/ocp-suggestion-api/internal/repo"
 	"github.com/ozoncp/ocp-suggestion-api/internal/utils"
 )
-
-//ErrNilPointer означает, что передан нулевой указатель
-var ErrNilPointer = errors.New("pointer is nil")
 
 // Flusher - интерфейс для сброса задач в хранилище
 type Flusher interface {
@@ -34,9 +30,6 @@ type flusher struct {
 //Flush сбрасывает слайс Suggestion в хранилище частями заданного размера (чанками).
 //Если при сбросе возникает ошибка, то несохранённый остаток возвращается функцией
 func (f *flusher) Flush(ctx context.Context, suggestions []models.Suggestion) ([]models.Suggestion, error) {
-	if f == nil {
-		return nil, ErrNilPointer
-	}
 	splitSuggestions, err := utils.SplitToBulks(suggestions, f.chunkSize)
 	if err != nil {
 		return suggestions, fmt.Errorf("SplitToBulks : %w", err)

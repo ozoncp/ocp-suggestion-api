@@ -2,6 +2,7 @@ package saver_test
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/golang/mock/gomock"
@@ -16,12 +17,10 @@ import (
 var _ = Describe("Saver", func() {
 	var (
 		ctrl        *gomock.Controller
-		ctx, ctxC   context.Context
-		cancel      context.CancelFunc
+		ctx         context.Context
 		mockFlusher *mocks.MockFlusher
-		s           saver.Saver
 		suggestions []models.Suggestion
-		err         error
+		err error
 	)
 
 	BeforeEach(func() {
@@ -41,110 +40,188 @@ var _ = Describe("Saver", func() {
 	})
 
 	Context("When create a new saver", func() {
-		BeforeEach(func() {
-			s = saver.NewSaver(ctx, 4, mockFlusher, time.Second)
-		})
-		AfterEach(func() {
-			err = s.Close(ctx)
-			Expect(err).NotTo(HaveOccurred())
+		It("should return a saver instance", func() {
+			s := saver.NewSaver(4, mockFlusher, 5*time.Second)
+			Expect(s).ShouldNot(BeNil())
 		})
 
-		It("should return a saver instance", func() {
-			Expect(s).ShouldNot(BeNil())
+		It("can make multiple Init() and Close()", func() {
+			s := saver.NewSaver(4, mockFlusher, 5*time.Second)
+			Expect(s.IsInit()).Should(BeFalse())
+			Expect(s.IsClosed()).Should(BeTrue())
+
+			s.Init(ctx)
+			Expect(s.IsInit()).Should(BeTrue())
+			Expect(s.IsClosed()).Should(BeFalse())
+			err = s.Close(ctx)
+			Expect(s.IsClosed()).Should(BeTrue())
+			Expect(err).NotTo(HaveOccurred())
+
+			s.Init(ctx)
+			Expect(s.IsInit()).Should(BeTrue())
+			s.Init(ctx)
+			Expect(s.IsInit()).Should(BeTrue())
+			err = s.Close(ctx)
+			Expect(s.IsClosed()).Should(BeTrue())
+			Expect(err).NotTo(HaveOccurred())
+			err = s.Close(ctx)
+			Expect(s.IsClosed()).Should(BeTrue())
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 
 	Context("When the save was successful", func() {
-		BeforeEach(func() {
-			s = saver.NewSaver(ctx, 4, mockFlusher, 500*time.Millisecond)
-		})
-		AfterEach(func() {
-			err = s.Close(ctx)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
 		It("should save to flusher when close", func() {
 			mockFlusher.EXPECT().
-				Flush(ctx, gomock.Any()).
+				Flush(gomock.Any(), gomock.Any()).
 				Return(nil, nil).
 				MinTimes(1)
 
+			s := saver.NewSaver(4, mockFlusher, 5*time.Second)
+			//s.Init() - не делаем, чтобы не запускать таймер
 			for _, suggestion := range suggestions {
-				err = s.Save(suggestion)
+				err = s.Save(ctx, suggestion)
 				Expect(err).NotTo(HaveOccurred())
 			}
+			Expect(s.IsBufferEmpty()).Should(BeFalse()) //Внутренний буфер после заполнения - непустой
+
+			err = s.Close(ctx)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(s.IsBufferEmpty()).Should(BeTrue()) //А после Close буфер - пустой
 		})
 
 		It("should save to flusher when ticker", func() {
 			mockFlusher.EXPECT().
-				Flush(ctx, gomock.Any()).
+				Flush(gomock.Any(), gomock.Any()).
 				Return(nil, nil).
 				MinTimes(1)
 
+			s := saver.NewSaver(4, mockFlusher, 100*time.Millisecond)
+			s.Init(ctx)
 			for _, suggestion := range suggestions {
-				err = s.Save(suggestion)
+				err = s.Save(ctx, suggestion)
 				Expect(err).NotTo(HaveOccurred())
 			}
-			time.Sleep(time.Second)
-		})
-	})
 
-	Context("When an error occurred", func() {
-		BeforeEach(func() {
-			s = saver.NewSaver(ctx, 3, mockFlusher, 5*time.Second)
-		})
-		AfterEach(func() {
+			Expect(s.IsBufferEmpty()).Should(BeFalse()) //Внутренний буфер после заполнения - непустой
+			time.Sleep(500 * time.Millisecond)
+			Expect(s.IsBufferEmpty()).Should(BeTrue()) //А через полсекунды буфер - пустой
 			err = s.Close(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("should failed to save through flusher because of overflow capacity", func() {
+		It("should extra flush when the capacity is exceeded", func() {
 			mockFlusher.EXPECT().
-				Flush(ctx, gomock.Any()).
+				Flush(gomock.Any(), gomock.Any()).
 				Return(nil, nil).
-				AnyTimes()
-			for _, suggestion := range suggestions {
-				err = s.Save(suggestion)
+				MinTimes(2) //Минимум 2 Flush: extra + Close
+
+			const capacity = 2
+			s := saver.NewSaver(capacity, mockFlusher, 5*time.Second)
+			s.Init(ctx)
+			for i, suggestion := range suggestions {
+				err = s.Save(ctx, suggestion)
+				Expect(err).NotTo(HaveOccurred())
+				if i == capacity { //превышение capacity -> extra flush, после чего буфер пустой
+					Expect(s.IsBufferEmpty()).Should(BeTrue())
+				} else { //иначе буфер - непустой
+					Expect(s.IsBufferEmpty()).Should(BeFalse())
+				}
 			}
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(Equal(saver.ErrCapacityOverflow))
+
+			err = s.Close(ctx)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(s.IsBufferEmpty()).Should(BeTrue())
 		})
 	})
 
-	Context("When context cancel", func() {
-		BeforeEach(func() {
-			ctxC, cancel = context.WithCancel(ctx)
-			s = saver.NewSaver(ctxC, 4, mockFlusher, 5*time.Second)
+	Context("When an error occurred", func() {
+		It("should be error when close and data left in inner buffer", func() {
+			mockFlusher.EXPECT().
+				Flush(gomock.Any(), suggestions).
+				Return(suggestions, errors.New("error")).
+				MinTimes(1)
+
+			s := saver.NewSaver(4, mockFlusher, 5*time.Second)
+			s.Init(ctx)
+			for _, suggestion := range suggestions {
+				err = s.Save(ctx, suggestion)
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(s.IsBufferEmpty()).Should(BeFalse())
+			err = s.Close(ctx)
+			Expect(s.IsBufferEmpty()).Should(BeFalse())
+			Expect(err).To(HaveOccurred())
 		})
 
+		It("should be error when save, data left in inner buffer and flush when close", func() {
+			failCall := mockFlusher.EXPECT().
+				Flush(gomock.Any(), gomock.Any()).
+				Return(nil, errors.New("error"))
+			successCall := mockFlusher.EXPECT().
+				Flush(gomock.Any(), gomock.Any()).
+				Return(nil, nil)
+			gomock.InOrder(failCall, successCall)
+
+			const capacity = 2
+			s := saver.NewSaver(capacity, mockFlusher, 5*time.Second)
+			s.Init(ctx)
+			for i, suggestion := range suggestions {
+				err = s.Save(ctx, suggestion)
+				if i == capacity { //превышение capacity -> extra flush, когда должна случиться ошибка
+					Expect(err).To(HaveOccurred())
+				} else {
+					Expect(err).NotTo(HaveOccurred())
+				}
+			}
+			Expect(s.IsBufferEmpty()).Should(BeFalse())
+			err = s.Close(ctx)
+			Expect(s.IsBufferEmpty()).Should(BeTrue())
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("should be error when ticker", func() {
+			defer GinkgoRecover()
+			mockFlusher.EXPECT().
+				Flush(gomock.Any(), suggestions).
+				Return(suggestions, errors.New("error")).
+				AnyTimes()
+
+			s := saver.NewSaver(4, mockFlusher, 100*time.Millisecond)
+			s.Init(ctx)
+			for _, suggestion := range suggestions {
+				err = s.Save(ctx, suggestion)
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			Expect(s.IsBufferEmpty()).Should(BeFalse()) //Внутренний буфер после заполнения - непустой
+			time.Sleep(500 * time.Millisecond)
+			Expect(s.IsBufferEmpty()).Should(BeFalse()) //И так как ошибка, остаётся непустым
+			err = s.Close(ctx)
+			Expect(err).To(HaveOccurred())
+		})
+
+	})
+
+	Context("When context cancel", func() {
 		It("should not save to flusher", func() {
+			ctxC, cancel := context.WithCancel(ctx)
 			mockFlusher.EXPECT().
 				Flush(ctxC, gomock.Any()).
 				Return(nil, nil).
 				Times(0)
 
+			s := saver.NewSaver(4, mockFlusher, 5*time.Second)
+			s.Init(ctxC)
 			for _, suggestion := range suggestions {
-				err = s.Save(suggestion)
+				err = s.Save(ctxC, suggestion)
 				Expect(err).NotTo(HaveOccurred())
 			}
-			cancel()
-		})
-		It("should panic when Close", func() {
-			mockFlusher.EXPECT().
-				Flush(ctxC, gomock.Any()).
-				Return(nil, nil).
-				AnyTimes()
+			Expect(s.IsBufferEmpty()).Should(BeFalse())
 
-			for _, suggestion := range suggestions {
-				err = s.Save(suggestion)
-				Expect(err).NotTo(HaveOccurred())
-			}
 			cancel()
-			closeF := func() {
-				_ = s.Close(ctxC)
-			}
-			time.Sleep(time.Second)
-			Expect(closeF).Should(Panic())
+			time.Sleep(500 * time.Millisecond)
+			Expect(s.IsBufferEmpty()).Should(BeFalse())
 		})
 	})
 })
