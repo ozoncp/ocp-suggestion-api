@@ -2,7 +2,6 @@ package flusher
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/ozoncp/ocp-suggestion-api/internal/models"
@@ -31,9 +30,6 @@ type flusher struct {
 //Flush сбрасывает слайс Suggestion в хранилище частями заданного размера (чанками).
 //Если при сбросе возникает ошибка, то несохранённый остаток возвращается функцией
 func (f *flusher) Flush(ctx context.Context, suggestions []models.Suggestion) ([]models.Suggestion, error) {
-	if f == nil {
-		return nil, errors.New("interface is nil")
-	}
 	splitSuggestions, err := utils.SplitToBulks(suggestions, f.chunkSize)
 	if err != nil {
 		return suggestions, fmt.Errorf("SplitToBulks : %w", err)
