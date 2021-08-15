@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
+
+package ocp.suggestion.api;
+
+option go_package = "github.com/ozoncp/ocp-suggestion-api/pkg/ocp-suggestion-api;ocp_suggestion_api";
+
+// OcpSuggestionApi - сервис для обработки предложений курсов
+service OcpSuggestionApi {
+  // CreateSuggestionV1 создаёт предложение курса и возвращает id предложения
+  rpc CreateSuggestionV1(CreateSuggestionV1Request) returns (CreateSuggestionV1Response) {
+    option (google.api.http) = {
+      post: "/v1/suggestion"
+      body: "*"
+    };
+  }
+
+  // DescribeSuggestionV1 возвращает описание предложения с указанным id
+  rpc DescribeSuggestionV1(DescribeSuggestionV1Request) returns (DescribeSuggestionV1Response) {
+    option (google.api.http) = {
+      get: "/v1/suggestion/{suggestion_id}"
+    };
+  }
+
+  // ListSuggestionV1 возвращает список предложений
+  rpc ListSuggestionV1(ListSuggestionV1Request) returns (ListSuggestionV1Response) {
+    option (google.api.http) = {
+      get: "/v1/suggestions"
+    };
+  }
+
+  // UpdateSuggestionV1 обновляет предложение с указанным id
+  rpc UpdateSuggestionV1(UpdateSuggestionV1Request) returns (UpdateSuggestionV1Response) {
+    option (google.api.http) = {
+      put: "/v1/suggestion/{suggestion.id}"
+      body: "*"
+    };
+  }
+
+  // RemoveSuggestionV1 удаляет предложение с указанным id
+  rpc RemoveSuggestionV1(RemoveSuggestionV1Request) returns (RemoveSuggestionV1Response) {
+    option (google.api.http) = {
+      delete: "/v1/suggestion/{suggestion_id}"
+    };
+  }
+}
+
+// Описание Suggestion
+message Suggestion {
+  uint64 id = 1 [(validate.rules).uint64.gt = 0];
+  uint64 user_id = 2 [(validate.rules).uint64.gt = 0];
+  uint64 course_id = 3 [(validate.rules).uint64.gt = 0];
+}
+
+// Create
+message CreateSuggestionV1Request {
+  uint64 user_id = 1 [(validate.rules).uint64.gt = 0];
+  uint64 course_id = 2 [(validate.rules).uint64.gt = 0];
+}
+
+message CreateSuggestionV1Response {
+  uint64 suggestion_id = 1;
+}
+
+// Read
+message DescribeSuggestionV1Request {
+  uint64 suggestion_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message DescribeSuggestionV1Response {
+  Suggestion suggestion = 1;
+}
+
+// List
+message ListSuggestionV1Request {
+}
+
+message ListSuggestionV1Response {
+  repeated Suggestion suggestions = 1;
+}
+
+// Update
+message UpdateSuggestionV1Request {
+  Suggestion suggestion = 1;
+}
+
+message UpdateSuggestionV1Response {
+}
+
+// Remove
+message RemoveSuggestionV1Request {
+  uint64 suggestion_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveSuggestionV1Response {
+}
