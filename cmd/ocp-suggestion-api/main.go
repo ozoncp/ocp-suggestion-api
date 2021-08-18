@@ -1,39 +1,65 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"os"
-	"time"
+	"net"
+	"net/http"
+
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
+
+	"github.com/ozoncp/ocp-suggestion-api/internal/api"
+	desc "github.com/ozoncp/ocp-suggestion-api/pkg/ocp-suggestion-api"
 )
 
-const ConfigFileName = "config.json"
+const (
+	grpcPort     = ":8082"
+	grpcEndpoint = "localhost:8082"
+	httpPort     = ":8080"
+)
 
-func main() {
-	fmt.Println("This is ocp-suggestion-api")
-
-	//readConfigFile - функтор, реализует открытие и закрытие файла, используя defer
-	readConfigFile := func(filename string) error {
-		file, err := os.Open(filename)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			if err := file.Close(); err != nil {
-				fmt.Println("error when closing config file: ", err)
-			}
-		}()
-		return nil
+func runGRPC() error {
+	listen, err := net.Listen("tcp", grpcPort)
+	if err != nil {
+		return fmt.Errorf("failed to Listen: %w", err)
 	}
 
-	//бесконечный цикл, пока не будет прочитана информация из конфиг-файла
-	for {
-		if errConfig := readConfigFile(ConfigFileName); errConfig != nil {
-			fmt.Printf("Error read config file '%s', error: %v\n", ConfigFileName, errConfig)
-			fmt.Println("Wait 5 seconds and repeat...")
-			time.Sleep(5 * time.Second)
-		} else {
-			fmt.Println("Successful read config file:", ConfigFileName)
-			break
-		}
+	s := grpc.NewServer()
+	desc.RegisterOcpSuggestionApiServer(s, api.NewSuggestionAPI())
+
+	if err = s.Serve(listen); err != nil {
+		return fmt.Errorf("failed to Serve: %w", err)
+	}
+
+	return nil
+}
+
+func runHTTP() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	mux := runtime.NewServeMux()
+	opts := []grpc.DialOption{grpc.WithInsecure()}
+
+	err := desc.RegisterOcpSuggestionApiHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts)
+	if err != nil {
+		log.Fatal().Msgf("runHTTP: failed to RegisterOcpSuggestionApiHandler: %v", err)
+	}
+
+	err = http.ListenAndServe(httpPort, mux)
+	if err != nil {
+		log.Fatal().Msgf("runHTTP: failed to ListenAndServe: %v", err)
+	}
+}
+
+func main() {
+	log.Printf("ocp-suggestion-api started")
+
+	go runHTTP()
+
+	if err := runGRPC(); err != nil {
+		log.Fatal().Msgf("runGRPC: %v", err)
 	}
 }

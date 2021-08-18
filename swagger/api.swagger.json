@@ -1,0 +1,283 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api/ocp-suggestion-api/ocp-suggestion-api.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/suggestion": {
+      "post": {
+        "summary": "CreateSuggestionV1 создаёт предложение курса и возвращает id предложения",
+        "operationId": "OcpSuggestionApi_CreateSuggestionV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiCreateSuggestionV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiCreateSuggestionV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "OcpSuggestionApi"
+        ]
+      }
+    },
+    "/v1/suggestion/{suggestion.id}": {
+      "put": {
+        "summary": "UpdateSuggestionV1 обновляет предложение с указанным id",
+        "operationId": "OcpSuggestionApi_UpdateSuggestionV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiUpdateSuggestionV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "suggestion.id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiUpdateSuggestionV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "OcpSuggestionApi"
+        ]
+      }
+    },
+    "/v1/suggestion/{suggestion_id}": {
+      "get": {
+        "summary": "DescribeSuggestionV1 возвращает описание предложения с указанным id",
+        "operationId": "OcpSuggestionApi_DescribeSuggestionV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiDescribeSuggestionV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "suggestion_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OcpSuggestionApi"
+        ]
+      },
+      "delete": {
+        "summary": "RemoveSuggestionV1 удаляет предложение с указанным id",
+        "operationId": "OcpSuggestionApi_RemoveSuggestionV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiRemoveSuggestionV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "suggestion_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OcpSuggestionApi"
+        ]
+      }
+    },
+    "/v1/suggestions": {
+      "get": {
+        "summary": "ListSuggestionV1 возвращает список предложений",
+        "operationId": "OcpSuggestionApi_ListSuggestionV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiListSuggestionV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "OcpSuggestionApi"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiCreateSuggestionV1Request": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "course_id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "Create"
+    },
+    "apiCreateSuggestionV1Response": {
+      "type": "object",
+      "properties": {
+        "suggestion_id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "apiDescribeSuggestionV1Response": {
+      "type": "object",
+      "properties": {
+        "suggestion": {
+          "$ref": "#/definitions/apiSuggestion"
+        }
+      }
+    },
+    "apiListSuggestionV1Response": {
+      "type": "object",
+      "properties": {
+        "suggestions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiSuggestion"
+          }
+        }
+      }
+    },
+    "apiRemoveSuggestionV1Response": {
+      "type": "object"
+    },
+    "apiSuggestion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "user_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "course_id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "Описание Suggestion"
+    },
+    "apiUpdateSuggestionV1Request": {
+      "type": "object",
+      "properties": {
+        "suggestion": {
+          "$ref": "#/definitions/apiSuggestion"
+        }
+      },
+      "title": "Update"
+    },
+    "apiUpdateSuggestionV1Response": {
+      "type": "object"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
