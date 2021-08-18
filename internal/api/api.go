@@ -77,13 +77,13 @@ func (r *suggestionAPI) ListSuggestionV1(ctx context.Context, req *desc.ListSugg
 		{ID: 2, UserID: 3, CourseID: 4},
 	}
 	log.Printf("ListSuggestionV1 response:")
-	Suggestions := make([]*desc.Suggestion, len(suggestions))
+	Suggestions := make([]*desc.Suggestion, 0, len(suggestions))
 	for i, suggestion := range suggestions {
 		log.Printf("suggestions[%d]: %v", i, suggestion)
-		Suggestions[i] = new(desc.Suggestion)
-		Suggestions[i].Id = suggestion.ID
-		Suggestions[i].CourseId = suggestion.CourseID
-		Suggestions[i].UserId = suggestion.UserID
+		Suggestions = append(Suggestions, &desc.Suggestion{
+			Id:       suggestion.ID,
+			CourseId: suggestion.CourseID,
+			UserId:   suggestion.UserID})
 	}
 
 	return &desc.ListSuggestionV1Response{
