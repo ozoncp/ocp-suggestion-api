@@ -121,9 +121,20 @@ func local_request_OcpSuggestionApi_DescribeSuggestionV1_0(ctx context.Context, 
 
 }
 
+var (
+	filter_OcpSuggestionApi_ListSuggestionV1_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
 func request_OcpSuggestionApi_ListSuggestionV1_0(ctx context.Context, marshaler runtime.Marshaler, client OcpSuggestionApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListSuggestionV1Request
 	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_OcpSuggestionApi_ListSuggestionV1_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := client.ListSuggestionV1(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -133,6 +144,13 @@ func request_OcpSuggestionApi_ListSuggestionV1_0(ctx context.Context, marshaler 
 func local_request_OcpSuggestionApi_ListSuggestionV1_0(ctx context.Context, marshaler runtime.Marshaler, server OcpSuggestionApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListSuggestionV1Request
 	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_OcpSuggestionApi_ListSuggestionV1_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := server.ListSuggestionV1(ctx, &protoReq)
 	return msg, metadata, err

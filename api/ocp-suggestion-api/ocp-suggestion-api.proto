@@ -75,6 +75,8 @@ message DescribeSuggestionV1Response {
 
 // List
 message ListSuggestionV1Request {
+  uint64 limit = 1 [(validate.rules).uint64.gt = 0];
+  uint64 offset = 2;
 }
 
 message ListSuggestionV1Response {

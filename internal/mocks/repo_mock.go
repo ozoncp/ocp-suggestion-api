@@ -49,6 +49,21 @@ func (mr *MockRepoMockRecorder) AddSuggestions(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSuggestions", reflect.TypeOf((*MockRepo)(nil).AddSuggestions), arg0, arg1)
 }
 
+// CreateSuggestion mocks base method.
+func (m *MockRepo) CreateSuggestion(arg0 context.Context, arg1 models.Suggestion) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSuggestion", arg0, arg1)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSuggestion indicates an expected call of CreateSuggestion.
+func (mr *MockRepoMockRecorder) CreateSuggestion(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSuggestion", reflect.TypeOf((*MockRepo)(nil).CreateSuggestion), arg0, arg1)
+}
+
 // DescribeSuggestion mocks base method.
 func (m *MockRepo) DescribeSuggestion(arg0 context.Context, arg1 uint64) (*models.Suggestion, error) {
 	m.ctrl.T.Helper()
@@ -77,4 +92,32 @@ func (m *MockRepo) ListSuggestions(arg0 context.Context, arg1, arg2 uint64) ([]m
 func (mr *MockRepoMockRecorder) ListSuggestions(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSuggestions", reflect.TypeOf((*MockRepo)(nil).ListSuggestions), arg0, arg1, arg2)
+}
+
+// RemoveSuggestion mocks base method.
+func (m *MockRepo) RemoveSuggestion(arg0 context.Context, arg1 uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveSuggestion", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveSuggestion indicates an expected call of RemoveSuggestion.
+func (mr *MockRepoMockRecorder) RemoveSuggestion(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSuggestion", reflect.TypeOf((*MockRepo)(nil).RemoveSuggestion), arg0, arg1)
+}
+
+// UpdateSuggestion mocks base method.
+func (m *MockRepo) UpdateSuggestion(arg0 context.Context, arg1 models.Suggestion) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSuggestion", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateSuggestion indicates an expected call of UpdateSuggestion.
+func (mr *MockRepoMockRecorder) UpdateSuggestion(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSuggestion", reflect.TypeOf((*MockRepo)(nil).UpdateSuggestion), arg0, arg1)
 }
