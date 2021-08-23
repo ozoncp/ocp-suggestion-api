@@ -127,6 +127,7 @@ func (r repo) ListSuggestions(ctx context.Context, limit, offset uint64) ([]mode
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var suggestions []models.Suggestion
 	for rows.Next() {
@@ -135,6 +136,9 @@ func (r repo) ListSuggestions(ctx context.Context, limit, offset uint64) ([]mode
 			return nil, err
 		}
 		suggestions = append(suggestions, suggestion)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return suggestions, nil

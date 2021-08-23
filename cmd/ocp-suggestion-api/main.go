@@ -13,8 +13,8 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 
@@ -41,7 +41,7 @@ func connectDB(cfg *config) (*sqlx.DB, error) {
 		cfg.DBUser,
 		cfg.DBPassword,
 	)
-	return sqlx.Connect("postgres", dataSourceName)
+	return sqlx.Connect("pgx", dataSourceName)
 }
 
 func runGRPC(ctx context.Context, cfg *config, db *sqlx.DB) error {
