@@ -90,6 +90,7 @@ var _ = Describe("Repo", func() {
 	})
 
 	Describe("Add several suggestions to repository", func() {
+		var createdNumber uint64
 		Context("When add successfully", func() {
 			BeforeEach(func() {
 				sqlMock.ExpectExec("INSERT INTO suggestions").
@@ -102,9 +103,12 @@ var _ = Describe("Repo", func() {
 					WillReturnResult(
 						sqlmock.NewResult(int64(suggestions[3].UserID), int64(len(suggestions))),
 					)
-				err = r.AddSuggestions(ctx, suggestions)
+				createdNumber, err = r.AddSuggestions(ctx, suggestions)
 			})
 
+			It("should return number of created suggestions", func() {
+				Expect(createdNumber).Should(BeEquivalentTo(len(suggestions)))
+			})
 			It("should not error", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -121,9 +125,12 @@ var _ = Describe("Repo", func() {
 					).
 					WillReturnError(errDatabase)
 
-				err = r.AddSuggestions(ctx, suggestions)
+				createdNumber, err = r.AddSuggestions(ctx, suggestions)
 			})
 
+			It("should return a zero created number", func() {
+				Expect(createdNumber).Should(BeEquivalentTo(0))
+			})
 			It("should error", func() {
 				Expect(err).To(HaveOccurred())
 			})

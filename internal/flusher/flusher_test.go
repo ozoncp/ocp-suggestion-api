@@ -46,7 +46,7 @@ var _ = Describe("Flusher", func() {
 			f = flusher.NewFlusher(4, mockRepo)
 			mockRepo.EXPECT().
 				AddSuggestions(ctx, gomock.Any()).
-				Return(nil).
+				Return(uint64(0), nil).
 				Times(1)
 			result, err = f.Flush(ctx, suggestions)
 			Expect(result).Should(BeNil())
@@ -57,7 +57,7 @@ var _ = Describe("Flusher", func() {
 			f = flusher.NewFlusher(2, mockRepo)
 			mockRepo.EXPECT().
 				AddSuggestions(ctx, gomock.Any()).
-				Return(nil).
+				Return(uint64(0), nil).
 				Times(2)
 			result, err = f.Flush(ctx, suggestions)
 			Expect(result).Should(BeNil())
@@ -73,7 +73,7 @@ var _ = Describe("Flusher", func() {
 		It("should failed to upload to repo, all items remain", func() {
 			mockRepo.EXPECT().
 				AddSuggestions(ctx, gomock.Any()).
-				Return(errors.New("error")).
+				Return(uint64(0), errors.New("error")).
 				Times(1)
 
 			result, err = f.Flush(ctx, suggestions)
@@ -84,10 +84,10 @@ var _ = Describe("Flusher", func() {
 		It("should upload to repo 1st chunk (1 successful call), then 1 failure call and 1 item remains", func() {
 			successCall := mockRepo.EXPECT().
 				AddSuggestions(ctx, gomock.Any()).
-				Return(nil)
+				Return(uint64(0), nil)
 			failCall := mockRepo.EXPECT().
 				AddSuggestions(ctx, gomock.Any()).
-				Return(errors.New("error"))
+				Return(uint64(0), errors.New("error"))
 			gomock.InOrder(successCall, failCall)
 
 			result, err = f.Flush(ctx, suggestions)

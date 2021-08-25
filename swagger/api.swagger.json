@@ -183,6 +183,37 @@
         "tags": [
           "OcpSuggestionApi"
         ]
+      },
+      "post": {
+        "summary": "MultiCreateSuggestionV1 несколько предложений курса и возвращает количество созданных предложений",
+        "operationId": "OcpSuggestionApi_MultiCreateSuggestionV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiMultiCreateSuggestionV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiMultiCreateSuggestionV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "OcpSuggestionApi"
+        ]
       }
     }
   },
@@ -228,6 +259,41 @@
           }
         }
       }
+    },
+    "apiMultiCreateSuggestionV1Request": {
+      "type": "object",
+      "properties": {
+        "new_suggestion": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiNewSuggestion"
+          }
+        }
+      },
+      "title": "MultiCreate"
+    },
+    "apiMultiCreateSuggestionV1Response": {
+      "type": "object",
+      "properties": {
+        "created_number": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "apiNewSuggestion": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "course_id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "NewSuggestion - структура для создания предложений"
     },
     "apiRemoveSuggestionV1Response": {
       "type": "object"

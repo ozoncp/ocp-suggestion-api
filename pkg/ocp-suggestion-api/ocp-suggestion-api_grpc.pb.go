@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 type OcpSuggestionApiClient interface {
 	// CreateSuggestionV1 создаёт предложение курса и возвращает id предложения
 	CreateSuggestionV1(ctx context.Context, in *CreateSuggestionV1Request, opts ...grpc.CallOption) (*CreateSuggestionV1Response, error)
+	// MultiCreateSuggestionV1 несколько предложений курса и возвращает количество созданных предложений
+	MultiCreateSuggestionV1(ctx context.Context, in *MultiCreateSuggestionV1Request, opts ...grpc.CallOption) (*MultiCreateSuggestionV1Response, error)
 	// DescribeSuggestionV1 возвращает описание предложения с указанным id
 	DescribeSuggestionV1(ctx context.Context, in *DescribeSuggestionV1Request, opts ...grpc.CallOption) (*DescribeSuggestionV1Response, error)
 	// ListSuggestionV1 возвращает список предложений
@@ -41,6 +43,15 @@ func NewOcpSuggestionApiClient(cc grpc.ClientConnInterface) OcpSuggestionApiClie
 func (c *ocpSuggestionApiClient) CreateSuggestionV1(ctx context.Context, in *CreateSuggestionV1Request, opts ...grpc.CallOption) (*CreateSuggestionV1Response, error) {
 	out := new(CreateSuggestionV1Response)
 	err := c.cc.Invoke(ctx, "/ocp.suggestion.api.OcpSuggestionApi/CreateSuggestionV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ocpSuggestionApiClient) MultiCreateSuggestionV1(ctx context.Context, in *MultiCreateSuggestionV1Request, opts ...grpc.CallOption) (*MultiCreateSuggestionV1Response, error) {
+	out := new(MultiCreateSuggestionV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.suggestion.api.OcpSuggestionApi/MultiCreateSuggestionV1", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,6 +100,8 @@ func (c *ocpSuggestionApiClient) RemoveSuggestionV1(ctx context.Context, in *Rem
 type OcpSuggestionApiServer interface {
 	// CreateSuggestionV1 создаёт предложение курса и возвращает id предложения
 	CreateSuggestionV1(context.Context, *CreateSuggestionV1Request) (*CreateSuggestionV1Response, error)
+	// MultiCreateSuggestionV1 несколько предложений курса и возвращает количество созданных предложений
+	MultiCreateSuggestionV1(context.Context, *MultiCreateSuggestionV1Request) (*MultiCreateSuggestionV1Response, error)
 	// DescribeSuggestionV1 возвращает описание предложения с указанным id
 	DescribeSuggestionV1(context.Context, *DescribeSuggestionV1Request) (*DescribeSuggestionV1Response, error)
 	// ListSuggestionV1 возвращает список предложений
@@ -106,6 +119,9 @@ type UnimplementedOcpSuggestionApiServer struct {
 
 func (UnimplementedOcpSuggestionApiServer) CreateSuggestionV1(context.Context, *CreateSuggestionV1Request) (*CreateSuggestionV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateSuggestionV1 not implemented")
+}
+func (UnimplementedOcpSuggestionApiServer) MultiCreateSuggestionV1(context.Context, *MultiCreateSuggestionV1Request) (*MultiCreateSuggestionV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiCreateSuggestionV1 not implemented")
 }
 func (UnimplementedOcpSuggestionApiServer) DescribeSuggestionV1(context.Context, *DescribeSuggestionV1Request) (*DescribeSuggestionV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DescribeSuggestionV1 not implemented")
@@ -146,6 +162,24 @@ func _OcpSuggestionApi_CreateSuggestionV1_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OcpSuggestionApiServer).CreateSuggestionV1(ctx, req.(*CreateSuggestionV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OcpSuggestionApi_MultiCreateSuggestionV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultiCreateSuggestionV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpSuggestionApiServer).MultiCreateSuggestionV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.suggestion.api.OcpSuggestionApi/MultiCreateSuggestionV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpSuggestionApiServer).MultiCreateSuggestionV1(ctx, req.(*MultiCreateSuggestionV1Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -232,6 +266,10 @@ var OcpSuggestionApi_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateSuggestionV1",
 			Handler:    _OcpSuggestionApi_CreateSuggestionV1_Handler,
+		},
+		{
+			MethodName: "MultiCreateSuggestionV1",
+			Handler:    _OcpSuggestionApi_MultiCreateSuggestionV1_Handler,
 		},
 		{
 			MethodName: "DescribeSuggestionV1",
