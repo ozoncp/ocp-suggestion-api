@@ -429,6 +429,15 @@ func (m *ListSuggestionV1Request) Validate() error {
 		return nil
 	}
 
+	if m.GetLimit() <= 0 {
+		return ListSuggestionV1RequestValidationError{
+			field:  "Limit",
+			reason: "value must be greater than 0",
+		}
+	}
+
+	// no validation rules for Offset
+
 	return nil
 }
 

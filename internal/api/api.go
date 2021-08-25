@@ -2,23 +2,25 @@ package api
 
 import (
 	"context"
-	"time"
+	"errors"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/ozoncp/ocp-suggestion-api/internal/models"
+	"github.com/ozoncp/ocp-suggestion-api/internal/repo"
 	desc "github.com/ozoncp/ocp-suggestion-api/pkg/ocp-suggestion-api"
 )
 
 type suggestionAPI struct {
 	desc.UnimplementedOcpSuggestionApiServer
+	repo repo.Repo
 }
 
 // NewSuggestionAPI возвращает suggestionAPI
-func NewSuggestionAPI() *suggestionAPI {
-	return &suggestionAPI{}
+func NewSuggestionAPI(repo repo.Repo) *suggestionAPI {
+	return &suggestionAPI{repo: repo}
 }
 
 // CreateSuggestionV1 создаёт предложение курса и возвращает его ID
@@ -28,9 +30,14 @@ func (r *suggestionAPI) CreateSuggestionV1(ctx context.Context, req *desc.Create
 	}
 
 	log.Printf("CreateSuggestionV1 request: %v", req)
-
-	// TODO: заменить на возвращаемый ID из БД, когда будет реализована работа с БД
-	createdID := uint64(time.Now().Unix())*1000000000 + uint64(time.Now().Nanosecond())
+	createdID, err := r.repo.CreateSuggestion(ctx, models.Suggestion{
+		ID:       0,
+		CourseID: req.CourseId,
+		UserID:   req.UserId,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	log.Printf("CreateSuggestionV1 response suggestionId: %d", createdID)
 
 	return &desc.CreateSuggestionV1Response{
@@ -45,12 +52,11 @@ func (r *suggestionAPI) DescribeSuggestionV1(ctx context.Context, req *desc.Desc
 	}
 
 	log.Printf("DescribeSuggestionV1 request: %v", req)
-
-	// TODO: заменить на возвращаемую информацию из БД, когда будет реализована работа с БД
-	suggestion := models.Suggestion{
-		ID:       req.SuggestionId,
-		CourseID: 2,
-		UserID:   3,
+	suggestion, err := r.repo.DescribeSuggestion(ctx, req.SuggestionId)
+	if errors.Is(err, repo.ErrSuggestionNotFound) {
+		return nil, status.Error(codes.NotFound, err.Error())
+	} else if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 	log.Printf("DescribeSuggestionV1 response: %v", suggestion)
 
@@ -70,12 +76,11 @@ func (r *suggestionAPI) ListSuggestionV1(ctx context.Context, req *desc.ListSugg
 	}
 
 	log.Printf("ListSuggestionV1 request: %v", req)
-
-	// TODO: заменить на возвращаемую информацию из БД, когда будет реализована работа с БД
-	suggestions := []models.Suggestion{
-		{ID: 1, UserID: 2, CourseID: 3},
-		{ID: 2, UserID: 3, CourseID: 4},
+	suggestions, err := r.repo.ListSuggestions(ctx, req.Limit, req.Offset)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
+
 	log.Printf("ListSuggestionV1 response:")
 	Suggestions := make([]*desc.Suggestion, 0, len(suggestions))
 	for i, suggestion := range suggestions {
@@ -98,7 +103,17 @@ func (r *suggestionAPI) UpdateSuggestionV1(ctx context.Context, req *desc.Update
 	}
 
 	log.Printf("UpdateSuggestionV1 request: %v", req)
-	// TODO: реализовать обновление информации в БД, когда будет реализована работа с БД
+	err := r.repo.UpdateSuggestion(ctx, models.Suggestion{
+		ID:       req.Suggestion.Id,
+		CourseID: req.Suggestion.CourseId,
+		UserID:   req.Suggestion.UserId,
+	})
+
+	if errors.Is(err, repo.ErrSuggestionNotFound) {
+		return nil, status.Error(codes.NotFound, err.Error())
+	} else if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	log.Printf("UpdateSuggestionV1 response: {}")
 
 	return &desc.UpdateSuggestionV1Response{}, nil
@@ -111,7 +126,12 @@ func (r *suggestionAPI) RemoveSuggestionV1(ctx context.Context, req *desc.Remove
 	}
 
 	log.Printf("RemoveSuggestionV1 request: %v", req)
-	// TODO: реализовать обновление информации в БД, когда будет реализована работа с БД
+	err := r.repo.RemoveSuggestion(ctx, req.SuggestionId)
+	if errors.Is(err, repo.ErrSuggestionNotFound) {
+		return nil, status.Error(codes.NotFound, err.Error())
+	} else if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	log.Printf("RemoveSuggestionV1 response: {}")
 
 	return &desc.RemoveSuggestionV1Response{}, nil

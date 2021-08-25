@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - net
+    restart: always
+
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "8080:80"
+    networks:
+      - net
+    restart: unless-stopped
+
+  ocp-suggestion-api:
+    build: .
+    environment:
+      GPRS_PORT: 8082
+      HTTP_PORT: 8081
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_HOST: ${POSTGRES_DB:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+    depends_on:
+      - postgres
+    ports:
+      - "8082:8082"
+      - "8081:8081"
+    networks:
+      - net
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  pgadmin:
+
+networks:
+  net:
+    driver: bridge
