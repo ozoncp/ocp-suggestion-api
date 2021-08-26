@@ -17,7 +17,7 @@ var ErrSuggestionNotFound = errors.New("suggestion not found")
 
 //Repo - интерфейс хранилища для сущности Suggestion
 type Repo interface {
-	AddSuggestions(ctx context.Context, suggestions []models.Suggestion) error
+	AddSuggestions(ctx context.Context, suggestions []models.Suggestion) (uint64, error)
 	CreateSuggestion(ctx context.Context, suggestion models.Suggestion) (uint64, error)
 	DescribeSuggestion(ctx context.Context, suggestionId uint64) (*models.Suggestion, error)
 	ListSuggestions(ctx context.Context, limit, offset uint64) ([]models.Suggestion, error)
@@ -58,7 +58,7 @@ func (r repo) CreateSuggestion(ctx context.Context, suggestion models.Suggestion
 }
 
 // AddSuggestions создает несколько предложений курсов в БД
-func (r repo) AddSuggestions(ctx context.Context, suggestions []models.Suggestion) error {
+func (r repo) AddSuggestions(ctx context.Context, suggestions []models.Suggestion) (uint64, error) {
 	query := squirrel.
 		Insert("suggestions").
 		Columns("user_id", "course_id").
@@ -75,12 +75,17 @@ func (r repo) AddSuggestions(ctx context.Context, suggestions []models.Suggestio
 		log.Printf("AddSuggestions sql: %s, args: %v", sqlStr, args)
 	}
 
-	_, err := query.ExecContext(ctx)
+	result, err := query.ExecContext(ctx)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return uint64(rowsAffected), nil
 }
 
 // DescribeSuggestion возвращает описание предложения курса из БД

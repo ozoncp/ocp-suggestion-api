@@ -35,7 +35,7 @@ func (f *flusher) Flush(ctx context.Context, suggestions []models.Suggestion) ([
 		return suggestions, fmt.Errorf("SplitToBulks : %w", err)
 	}
 	for i, chunk := range splitSuggestions {
-		if err := f.suggestionRepo.AddSuggestions(ctx, chunk); err != nil {
+		if _, err := f.suggestionRepo.AddSuggestions(ctx, chunk); err != nil {
 			return suggestions[uint(i)*f.chunkSize:], fmt.Errorf("AddSuggestions : %w", err)
 		}
 	}

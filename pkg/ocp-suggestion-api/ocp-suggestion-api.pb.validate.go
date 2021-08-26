@@ -118,6 +118,85 @@ var _ interface {
 	ErrorName() string
 } = SuggestionValidationError{}
 
+// Validate checks the field values on NewSuggestion with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *NewSuggestion) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if m.GetUserId() <= 0 {
+		return NewSuggestionValidationError{
+			field:  "UserId",
+			reason: "value must be greater than 0",
+		}
+	}
+
+	if m.GetCourseId() <= 0 {
+		return NewSuggestionValidationError{
+			field:  "CourseId",
+			reason: "value must be greater than 0",
+		}
+	}
+
+	return nil
+}
+
+// NewSuggestionValidationError is the validation error returned by
+// NewSuggestion.Validate if the designated constraints aren't met.
+type NewSuggestionValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NewSuggestionValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NewSuggestionValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NewSuggestionValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NewSuggestionValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NewSuggestionValidationError) ErrorName() string { return "NewSuggestionValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NewSuggestionValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNewSuggestion.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NewSuggestionValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NewSuggestionValidationError{}
+
 // Validate checks the field values on CreateSuggestionV1Request with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -267,6 +346,159 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CreateSuggestionV1ResponseValidationError{}
+
+// Validate checks the field values on MultiCreateSuggestionV1Request with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateSuggestionV1Request) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetNewSuggestion() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return MultiCreateSuggestionV1RequestValidationError{
+					field:  fmt.Sprintf("NewSuggestion[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// MultiCreateSuggestionV1RequestValidationError is the validation error
+// returned by MultiCreateSuggestionV1Request.Validate if the designated
+// constraints aren't met.
+type MultiCreateSuggestionV1RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateSuggestionV1RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateSuggestionV1RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateSuggestionV1RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateSuggestionV1RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateSuggestionV1RequestValidationError) ErrorName() string {
+	return "MultiCreateSuggestionV1RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateSuggestionV1RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateSuggestionV1Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateSuggestionV1RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateSuggestionV1RequestValidationError{}
+
+// Validate checks the field values on MultiCreateSuggestionV1Response with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateSuggestionV1Response) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for CreatedNumber
+
+	return nil
+}
+
+// MultiCreateSuggestionV1ResponseValidationError is the validation error
+// returned by MultiCreateSuggestionV1Response.Validate if the designated
+// constraints aren't met.
+type MultiCreateSuggestionV1ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateSuggestionV1ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateSuggestionV1ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateSuggestionV1ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateSuggestionV1ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateSuggestionV1ResponseValidationError) ErrorName() string {
+	return "MultiCreateSuggestionV1ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateSuggestionV1ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateSuggestionV1Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateSuggestionV1ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateSuggestionV1ResponseValidationError{}
 
 // Validate checks the field values on DescribeSuggestionV1Request with the
 // rules defined in the proto definition for this message. If any rules are

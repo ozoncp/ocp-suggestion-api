@@ -7,14 +7,20 @@ import (
 	"fmt"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/golang/mock/gomock"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/ozoncp/ocp-suggestion-api/internal/api"
+	"github.com/ozoncp/ocp-suggestion-api/internal/metrics"
+	"github.com/ozoncp/ocp-suggestion-api/internal/mocks"
 	"github.com/ozoncp/ocp-suggestion-api/internal/models"
+	"github.com/ozoncp/ocp-suggestion-api/internal/producer"
 	"github.com/ozoncp/ocp-suggestion-api/internal/repo"
 	desc "github.com/ozoncp/ocp-suggestion-api/pkg/ocp-suggestion-api"
 )
@@ -26,12 +32,29 @@ var _ = Describe("Api", func() {
 		db          *sql.DB
 		sqlxDB      *sqlx.DB
 		sqlMock     sqlmock.Sqlmock
+		ctrl        *gomock.Controller
+		prodMock    *mocks.MockProducer
 		err         error
 		ctx         context.Context
 		r           repo.Repo
 		suggestions []models.Suggestion
 		grpc        desc.OcpSuggestionApiServer
 	)
+	const (
+		batchSize = 2
+		topic     = "ocp-suggestion-api"
+	)
+
+	BeforeSuite(func() {
+		ctrl = gomock.NewController(GinkgoT())
+		prodMock = mocks.NewMockProducer(ctrl)
+		opentracing.SetGlobalTracer(mocktracer.New())
+		metrics.RegisterMetrics()
+	})
+
+	AfterSuite(func() {
+		ctrl.Finish()
+	})
 
 	BeforeEach(func() {
 		ctx = context.Background()
@@ -39,7 +62,8 @@ var _ = Describe("Api", func() {
 		Expect(err).NotTo(HaveOccurred())
 		sqlxDB = sqlx.NewDb(db, "sqlmock")
 		r = repo.NewRepo(sqlxDB)
-		grpc = api.NewSuggestionAPI(r)
+
+		grpc = api.NewSuggestionAPI(r, batchSize, prodMock)
 
 		suggestions = []models.Suggestion{
 			{ID: 1, UserID: 1, CourseID: 1},
@@ -75,10 +99,14 @@ var _ = Describe("Api", func() {
 					WithArgs(suggestions[0].UserID, suggestions[0].CourseID).
 					WillReturnRows(rows)
 
+				message := producer.NewMessage(suggestions[0].ID, producer.Create)
+				prodMock.EXPECT().Send(topic, message).
+					Return(nil)
+
 				response, err = grpc.CreateSuggestionV1(ctx, request)
 			})
 
-			It("should should return the created ID correctly", func() {
+			It("should return the created ID correctly", func() {
 				Expect(response.SuggestionId).Should(Equal(suggestions[0].ID))
 			})
 			It("should not error", func() {
@@ -115,6 +143,82 @@ var _ = Describe("Api", func() {
 			})
 			It("should return an internal error", func() {
 				Expect(status.Convert(err).Code()).Should(Equal(codes.Internal))
+			})
+		})
+	})
+
+	Describe("Multiple create suggestion", func() {
+		var (
+			request  *desc.MultiCreateSuggestionV1Request
+			response *desc.MultiCreateSuggestionV1Response
+		)
+		BeforeEach(func() {
+			request = &desc.MultiCreateSuggestionV1Request{
+				NewSuggestion: make([]*desc.NewSuggestion, 0, len(suggestions)),
+			}
+			for _, suggestion := range suggestions {
+				request.NewSuggestion = append(request.NewSuggestion, &desc.NewSuggestion{
+					CourseId: suggestion.CourseID,
+					UserId:   suggestion.UserID})
+			}
+		})
+
+		Context("When create successfully", func() {
+			BeforeEach(func() {
+				for i := 0; i < len(suggestions); i += batchSize {
+					sqlMock.ExpectExec("INSERT INTO suggestions").
+						WithArgs(
+							suggestions[i].UserID, suggestions[i].CourseID,
+							suggestions[i+1].UserID, suggestions[i+1].CourseID,
+						).
+						WillReturnResult(
+							sqlmock.NewResult(int64(suggestions[i+1].UserID), 2),
+						)
+				}
+
+				response, err = grpc.MultiCreateSuggestionV1(ctx, request)
+			})
+
+			It("should return a correct created number", func() {
+				Expect(response.CreatedNumber).Should(BeEquivalentTo(len(suggestions)))
+			})
+			It("should not error", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
+		Context("When fails to create", func() {
+			BeforeEach(func() {
+				sqlMock.ExpectExec("INSERT INTO suggestions").
+					WithArgs(
+						suggestions[0].UserID, suggestions[0].CourseID,
+						suggestions[1].UserID, suggestions[1].CourseID,
+					).
+					WillReturnError(errDatabase)
+
+				response, err = grpc.MultiCreateSuggestionV1(ctx, request)
+			})
+
+			It("should be nil response", func() {
+				Expect(response).Should(BeNil())
+			})
+			It("should error", func() {
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("When fails to create due to invalid arguments", func() {
+			BeforeEach(func() {
+				request.NewSuggestion[0].UserId = 0
+
+				response, err = grpc.MultiCreateSuggestionV1(ctx, request)
+			})
+
+			It("should be nil response", func() {
+				Expect(response).Should(BeNil())
+			})
+			It("should return an invalid argument error", func() {
+				Expect(status.Convert(err).Code()).Should(Equal(codes.InvalidArgument))
 			})
 		})
 	})
@@ -312,6 +416,10 @@ var _ = Describe("Api", func() {
 					).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 
+				message := producer.NewMessage(request.Suggestion.Id, producer.Update)
+				prodMock.EXPECT().Send(topic, message).
+					Return(nil)
+
 				response, err = grpc.UpdateSuggestionV1(ctx, request)
 			})
 
@@ -397,6 +505,10 @@ var _ = Describe("Api", func() {
 				sqlMock.ExpectExec("DELETE FROM suggestions WHERE").
 					WithArgs(suggestions[0].ID).
 					WillReturnResult(sqlmock.NewResult(1, 1))
+
+				message := producer.NewMessage(suggestions[0].ID, producer.Remove)
+				prodMock.EXPECT().Send(topic, message).
+					Return(nil)
 
 				response, err = grpc.RemoveSuggestionV1(ctx, request)
 			})

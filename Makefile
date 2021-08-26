@@ -69,6 +69,12 @@ deps: install-go-deps
 .PHONY: install-go-deps
 install-go-deps:
 	ls go.mod || go mod init github.com/ozoncp/${PROJECT_NAME}
+	go get -d github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	go get -d google.golang.org/grpc/cmd/protoc-gen-go-grpc
+	go get -d github.com/envoyproxy/protoc-gen-validate
+	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+	go install github.com/envoyproxy/protoc-gen-validate
 
 .PHONY: deploy
 deploy:
