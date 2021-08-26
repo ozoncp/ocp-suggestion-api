@@ -95,17 +95,11 @@ func (r *suggestionAPI) MultiCreateSuggestionV1(ctx context.Context, req *desc.M
 
 	var createdNumberTotal uint64
 	for _, chunk := range chunkSuggestions {
-		createdNumber, err := func() (uint64, error) {
-			childSpan := tracer.StartSpan("MultiCreateSuggestionV1Batch", opentracing.ChildOf(span.Context()))
-			childSpan.LogFields(tracelog.Int("batch_size_bytes", binary.Size(chunk)))
-			defer childSpan.Finish()
+		childSpan := tracer.StartSpan("MultiCreateSuggestionV1Batch", opentracing.ChildOf(span.Context()))
+		childSpan.LogFields(tracelog.Int("batch_size_bytes", binary.Size(chunk)))
 
-			number, err := r.repo.AddSuggestions(ctx, chunk)
-			if err != nil {
-				return 0, status.Error(codes.Internal, err.Error())
-			}
-			return number, nil
-		}()
+		createdNumber, err := r.repo.AddSuggestions(ctx, chunk)
+		childSpan.Finish()
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}

@@ -45,9 +45,7 @@ func (p *producer) Send(topic string, message *Message) error {
 
 	msg := &sarama.ProducerMessage{
 		Topic:     topic,
-		Key:       sarama.StringEncoder(topic),
 		Value:     sarama.StringEncoder(bytes),
-		Partition: -1,
 		Timestamp: time.Time{},
 	}
 	_, _, err = p.prod.SendMessage(msg)
